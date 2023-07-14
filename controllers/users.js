@@ -15,15 +15,12 @@ module.exports.getUser = (_req, res) => {
 /** ишем пользователя по Id */
 module.exports.getUserId = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Передача некорректных данных пользователя' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Пользователь с указаным _id не найден' });
-      }
-      return res.status(500).send({ message: 'Ошибка на сервере' });
+      return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь с указаным _id не найден' });
     });
 };
 
@@ -35,7 +32,7 @@ module.exports.createUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные пользователя' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
@@ -53,7 +50,7 @@ module.exports.updateUser = (req, res) => {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь не найден' });
       }
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные пользователя' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
@@ -70,7 +67,7 @@ module.exports.updateAvatar = (req, res) => {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь не найден' });
       }
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные пользователя' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });

@@ -11,11 +11,11 @@ module.exports.createCards = (req, res) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.status(201).send(card))
+    .then((card) => res.send(card))
     // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные при создании карточки' });
       }
     });
 };
@@ -23,7 +23,7 @@ module.exports.createCards = (req, res) => {
 /** все карточки */
 module.exports.getCards = (_req, res) => {
   Card.find({})
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.send(card))
     .catch(() => res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' }));
 };
 
@@ -37,7 +37,7 @@ module.exports.deleteCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные карточки' });
+        res.status(BAD_REQUEST).send({ message: 'Некорректные данные карточки' });
       }
       res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
@@ -53,10 +53,7 @@ module.exports.likeCard = (req, res) => {
     .then((like) => res.send(like))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Пользователь с указаным _id не найден' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для постановки лайка' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
@@ -72,10 +69,7 @@ module.exports.dislikeCard = (req, res) => {
     .then((like) => res.send(like))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка' });
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Пользователь с указаным _id не найден' });
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для снятия лайка' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
