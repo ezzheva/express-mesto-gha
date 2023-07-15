@@ -50,7 +50,8 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((like) => res.send(like))
+    .orFail()
+    .then((like) => res.status(200).send(like))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для постановки лайка' });
@@ -69,7 +70,8 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((like) => res.send(like))
+    .orFail()
+    .then((like) => res.status(200).send(like))
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для снятия лайка' });
