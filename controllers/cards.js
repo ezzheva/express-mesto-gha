@@ -55,6 +55,9 @@ module.exports.likeCard = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для постановки лайка' });
       }
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
+      }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
 };
@@ -70,6 +73,9 @@ module.exports.dislikeCard = (req, res) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные для снятия лайка' });
+      }
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
     });
