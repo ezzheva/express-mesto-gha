@@ -24,7 +24,7 @@ module.exports.createCards = (req, res) => {
 module.exports.getCards = (_req, res) => {
   Card.find({})
     .then((card) => res.send(card))
-    .catch(() => res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' }));
+    .catch(() => res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
 };
 
 /** удаляем карточку */
@@ -39,7 +39,7 @@ module.exports.deleteCard = (req, res) => {
       if (err.name === 'CastError') {
         res.status(BAD_REQUEST).send({ message: 'Некорректные данные карточки' });
       }
-      res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -59,7 +59,7 @@ module.exports.likeCard = (req, res) => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -79,6 +79,6 @@ module.exports.dislikeCard = (req, res) => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };

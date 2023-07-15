@@ -9,7 +9,7 @@ const {
 module.exports.getUser = (_req, res) => {
   User.find({})
     .then((user) => res.send(user))
-    .catch(() => res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' }));
+    .catch(() => res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
 };
 
 /** ишем пользователя по Id */
@@ -24,7 +24,7 @@ exports.getUserId = (req, res) => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -38,7 +38,7 @@ module.exports.createUser = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -56,7 +56,7 @@ module.exports.updateUser = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
 
@@ -73,6 +73,6 @@ module.exports.updateAvatar = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка на сервере' });
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
     });
 };
