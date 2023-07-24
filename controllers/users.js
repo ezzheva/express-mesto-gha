@@ -1,3 +1,6 @@
+const bcrypt = require('bcryptjs');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
   BAD_REQUEST, // 400
@@ -30,15 +33,25 @@ exports.getUserId = (req, res) => {
 
 /** создание пользователя */
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
-      }
-      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => {
+      User.create({
+        name, about, avatar, email, password: hash,
+      })
+        .then(() => res.status(201).send({
+          data: {
+            name, about, avatar, email,
+          },
+        }))
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
+          }
+          return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+        });
     });
 };
 
@@ -71,6 +84,44 @@ module.exports.updateAvatar = (req, res) => {
         return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь не найден' });
       }
       if (err.name === 'ValidationError') {
+        return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
+      }
+      return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+    });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email }).select('+password').then((user) => {
+    if (!user) {
+      return Promise.reject(new Error('Неправильные почта или пароль'));
+    }
+    return bcrypt.compare(password, user.password);
+  })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+  User.findUserByCredentials(email, password).then((user) => {
+    const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+    res.send({ token });
+  })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+};
+
+/** текущий пользователь */
+module.exports.getUserMe = (req, res) => {
+  User.findById(req.user._id)
+    // eslint-disable-next-line consistent-return
+    .then((user) => {
+      if (!user) {
+        return res.status(NOT_FOUND_PAGE_CODE).send({ message: 'Пользователь c указанным _id не найден' });
+      }
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
         return res.status(BAD_REQUEST).send({ message: 'Некорректные данные пользователя' });
       }
       return res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
