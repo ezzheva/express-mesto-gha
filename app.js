@@ -10,11 +10,6 @@ const app = express();
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-// app.use((req, _res, next) => {
-//   req.user = { _id: '64aeb95c3b873d4817a74d6a' };
-//   next();
-// });
-
 app.use(auth);
 
 app.post('/signin', login);
@@ -23,6 +18,19 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use('*', (_req, res) => res.status(404).json({ message: 'Страница не найдена' }));
+
+app.use((err, _req, res, next) => {
+  /** если у ошибки нет статуса выставляем 500 */
+  const { statusCode = 500, massage } = err;
+  res.status(statusCode).send({
+    /** проверяем статус и выставляемсообщение в зависимости от него */
+    message: statusCode === 500
+      ? 'Ошибка на сервере'
+      : massage,
+  });
+  next();
+});
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
