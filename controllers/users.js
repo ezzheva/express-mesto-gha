@@ -3,11 +3,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { NotFoundError, BadRequest, ConflictError } = require('../errors/errors');
-// const {
-//   BAD_REQUEST, // 400
-//   NOT_FOUND_PAGE_CODE, // 404
-//   SERVER_ERROR, // 500
-// } = require('../utils/constants');
 
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
@@ -17,7 +12,7 @@ module.exports.getUser = (_req, res, next) => {
 };
 
 /** ишем пользователя по Id */
-exports.getUserId = (req, res) => {
+exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail()
     .then((user) => {
@@ -53,10 +48,12 @@ module.exports.createUser = (req, res, next) => {
         // eslint-disable-next-line consistent-return
         .catch((err) => {
           if (err.code === 11000) {
-            return next(new ConflictError('Пользователь с таким email уже существует'));
+            next(new ConflictError('Пользователь с таким email уже существует'));
+            return;
           }
           if (err.name === 'ValidationError') {
-            return next(new BadRequest('Некорректные данные пользователя'));
+            next(new BadRequest('Некорректные данные пользователя'));
+            return;
           }
           next(err);
         });
@@ -65,7 +62,7 @@ module.exports.createUser = (req, res, next) => {
 };
 
 /** обновляем данные */
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
 
   // eslint-disable-next-line max-len
@@ -80,13 +77,13 @@ module.exports.updateUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         // eslint-disable-next-line no-undef
-        return next(new BadRequest('Некорректные данные пользователя'));
+        next(new BadRequest('Некорректные данные пользователя'));
       }
     });
 };
 
 /** обновляем аватар */
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
@@ -111,14 +108,15 @@ module.exports.login = (req, res, next) => {
     if (!user) {
       return Promise.reject(new Error('Неправильные почта или пароль'));
     }
-    return bcrypt.compare(password, user.password);
-  })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
-  User.findUserByCredentials(email, password).then((user) => {
-    const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-    res.send({ token });
+    return bcrypt.compare(password, user.password)
+      // eslint-disable-next-line consistent-return
+      .then((matched) => {
+        if (!matched) {
+          return Promise.reject(new Error('Неправильные почта или пароль'));
+        }
+        const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+        res.send({ token });
+      });
   })
     .catch(next);
 };
