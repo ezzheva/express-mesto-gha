@@ -14,17 +14,13 @@ module.exports.getUser = (_req, res, next) => {
 /** ишем пользователя по Id */
 exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail()
+    .orFail(() => { throw new NotFoundError('Пользователь c указанным _id не найден'); })
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь c указанным _id не найден');
-      }
       res.send(user);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'CastError') {
-        // eslint-disable-next-line no-undef
         return (next(new BadRequest('Некорректные данные пользователя')));
       }
     });
@@ -40,10 +36,12 @@ module.exports.createUser = (req, res, next) => {
       User.create({
         name, about, avatar, email, password: hash,
       })
-        .then(() => res.status(201).send({
-          data: {
-            name, about, avatar, email,
-          },
+        .then((user) => res.status(201).send({
+          _id: user._id,
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+          email: user.email,
         }))
         // eslint-disable-next-line consistent-return
         .catch((err) => {
@@ -67,10 +65,8 @@ module.exports.updateUser = (req, res, next) => {
 
   // eslint-disable-next-line max-len
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    .orFaiil(() => { throw new NotFoundError('Пользователь не найден'); })
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь не найден');
-      }
       res.send(user);
     })
     // eslint-disable-next-line consistent-return
@@ -87,17 +83,15 @@ module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+    .orFaiil(() => { throw new NotFoundError('Пользователь не найден'); })
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь не найден');
-      }
       res.send(user);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
         // eslint-disable-next-line no-undef
-        return next(new BadRequest('Некорректные данные пользователя'));
+        next(new BadRequest('Некорректные данные пользователя'));
       }
     });
 };
