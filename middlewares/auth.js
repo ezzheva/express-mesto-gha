@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
 
-  if (!authorization || !authorization.startsWith('Beader')) {
+  if (!authorization || !authorization.startsWith('Bearer')) {
     return res.status(401).send({ message: 'Неоходима авторизация' });
   }
   const token = authorization.replace('Beader', '');
