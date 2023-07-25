@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { NotFoundError } = require('../errors/not-found-error');
-const { BadRequest } = require('../errors/bad-request-error');
+const NotFoundError = require('../errors/NotFoundError');
+const BadRequest = require('../errors/BadRequest');
+const ConflictError = require('../errors/ConflictError');
 
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
@@ -46,11 +47,11 @@ module.exports.createUser = (req, res, next) => {
     ))
     // eslint-disable-next-line consistent-return
     .catch((err) => {
-      // if (err.code === 11000) {
-      //   next(new ConflictError('Пользователь с таким email уже существует'));
-      // }
+      if (err.code === 11000) {
+        return next(new ConflictError('Пользователь с таким email уже существует'));
+      }
       if (err.name === 'ValidationError') {
-        next(new BadRequest('Некорректные данные пользователя'));
+        return next(new BadRequest('Некорректные данные пользователя'));
       }
       next(err);
     });

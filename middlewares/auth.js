@@ -1,9 +1,9 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
-const { AuthorizeError } = require('../errors/authorize-error');
+const AuthorizeError = require('../errors/AuthorizeError');
 
 // eslint-disable-next-line consistent-return
-module.exports = (req, res, next) => {
+module.exports = (req, _res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer')) {

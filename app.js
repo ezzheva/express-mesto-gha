@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
-const { NotFoundError } = require('./errors/not-found-error');
+const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 
