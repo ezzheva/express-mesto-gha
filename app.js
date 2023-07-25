@@ -1,11 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { celebrate, Joi } = require('celebrate');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { errors } = require('celebrate');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const cookieParser = require('cookie-parser');
+const { NotFoundError } = require('./errors/errors');
 
 const { PORT = 3000 } = process.env;
 
@@ -16,7 +13,7 @@ const app = express();
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-app.use(cookieParser());
+app.use(express.json());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -35,22 +32,19 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use(auth);
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
+app.use('/users', auth, require('./routes/users'));
+app.use('/cards', auth, require('./routes/cards'));
 
-app.use('*', (_req, res) => res.status(404).json({ message: 'Страница не найдена' }));
+app.use('*', (_req, _res, next) => { next(new NotFoundError('Страница не найдена')); });
 
 /** централизованный обработчик ошибок */
 app.use(errors());
 app.use((err, _req, res, next) => {
-  /** если у ошибки нет статуса выставляем 500 */
-  const { statusCode = 500, massage } = err;
+  const { statusCode = 500, message } = err;
   res.status(statusCode).send({
-    /** проверяем статус и выставляемсообщение в зависимости от него */
     message: statusCode === 500
       ? 'Ошибка на сервере'
-      : massage,
+      : message,
   });
   next();
 });
