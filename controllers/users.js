@@ -1,5 +1,4 @@
 const bcrypt = require('bcryptjs');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { NotFoundError, BadRequest, ConflictError } = require('../errors/errors');
@@ -7,7 +6,7 @@ const { NotFoundError, BadRequest, ConflictError } = require('../errors/errors')
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
   User.find({})
-    .then((user) => res.send(user))
+    .then((users) => res.status(200).send(users))
     .catch(next);
 };
 
@@ -16,14 +15,14 @@ exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail()
     .then((user) => {
-      res.send(user);
+      res.status(200).send(user);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные пользователя'));
       }
-      if (err.name === 'DocumenrNotFound') {
+      if (err.name === 'DocumentNotFound') {
         return next(new NotFoundError('Пользователь c указанным _id не найден'));
       }
       next(err);
@@ -39,19 +38,19 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.status(201).send({
-      _id: user._id,
-      name: user.name,
-      about: user.about,
-      avatar: user.avatar,
-      email: user.email,
-    }))
+    .then((user) => {
+      const { _id } = user;
+      return res.status(201).send({
+        _id, name, about, avatar, email,
+      });
+    })
+    // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
+        return next(new ConflictError('Пользователь с таким email уже существует'));
       }
       if (err.name === 'ValidationError') {
-        next(new BadRequest('Некорректные данные пользователя'));
+        return next(new BadRequest('Некорректные данные пользователя'));
       }
       next(err);
     });
@@ -62,9 +61,12 @@ module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .orFaiil(() => { throw new NotFoundError('Пользователь не найден'); })
+    .orFail()
     .then((user) => {
-      res.send(user);
+      if (!user) {
+        return next(new NotFoundError('Пользователь не найден'));
+      }
+      return res.status(200).send(user);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
@@ -80,9 +82,9 @@ module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .orFaiil()
-    .then((user) => {
-      res.send(user);
+    .orFail()
+    .then((users) => {
+      res.status(200).send(users);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
@@ -101,11 +103,7 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((userId) => {
       const token = jwt.sign({ _id: userId._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-        sameSite: true,
-      });
+      res.status(200).send({ _id: token });
     })
     .catch(next);
 };
@@ -115,14 +113,14 @@ module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
     .orFail()
     .then((user) => {
-      res.send(user);
+      res.status(200).send(user);
     })
   // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные пользователя'));
       }
-      if (err.name === 'DocumenrNotFound') {
+      if (err.name === 'DocumentNotFound') {
         return next(new NotFoundError('Пользователь c указанным _id не найден'));
       }
       next(err);
