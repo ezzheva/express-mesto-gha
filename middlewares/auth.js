@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
-const AuthorizeError = require('../errors/errors');
+const { AuthorizeError } = require('../errors/authorize-error');
 
 // eslint-disable-next-line consistent-return
 module.exports = (req, res, next) => {

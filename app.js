@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
-const { NotFoundError } = require('./errors/errors');
+const { NotFoundError } = require('./errors/not-found-error');
 
 const { PORT = 3000 } = process.env;
 
@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-// app.use(express.json());
+app.use(express.json());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({

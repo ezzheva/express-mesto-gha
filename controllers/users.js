@@ -1,7 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { NotFoundError, BadRequest, ConflictError } = require('../errors/errors');
+const { NotFoundError } = require('../errors/not-found-error');
+const { BadRequest } = require('../errors/bad-request-error');
 
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
@@ -38,19 +39,18 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => {
-      const { _id } = user;
-      return res.status(201).send({
-        _id, name, about, avatar, email,
-      });
-    })
+    .then(() => res.status(201).send(
+      {
+        name, about, avatar, email,
+      },
+    ))
     // eslint-disable-next-line consistent-return
     .catch((err) => {
-      if (err.code === 11000) {
-        return next(new ConflictError('Пользователь с таким email уже существует'));
-      }
+      // if (err.code === 11000) {
+      //   next(new ConflictError('Пользователь с таким email уже существует'));
+      // }
       if (err.name === 'ValidationError') {
-        return next(new BadRequest('Некорректные данные пользователя'));
+        next(new BadRequest('Некорректные данные пользователя'));
       }
       next(err);
     });
@@ -101,9 +101,9 @@ module.exports.updateAvatar = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
-    .then((userId) => {
-      const token = jwt.sign({ _id: userId._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.status(200).send({ _id: token });
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.status(200).send({ token });
     })
     .catch(next);
 };
