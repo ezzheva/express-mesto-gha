@@ -13,6 +13,13 @@ class AuthorizeError extends Error {
   }
 }
 
+class CurrentError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 403;
+  }
+}
+
 class NotFoundError extends Error {
   constructor(message) {
     super(message);
@@ -28,4 +35,4 @@ class ConflictError extends Error {
 }
 
 // eslint-disable-next-line no-unused-expressions, no-sequences
-module.export = NotFoundError, AuthorizeError, BadRequest, ConflictError;
+module.export = NotFoundError, AuthorizeError, BadRequest, CurrentError, ConflictError;
