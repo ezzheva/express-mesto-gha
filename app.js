@@ -42,7 +42,7 @@ app.use('/cards', require('./routes/cards'));
 app.use('*', (_req, res) => res.status(404).json({ message: 'Страница не найдена' }));
 
 /** централизованный обработчик ошибок */
-app.use(errors()); // обработчик ошибок celebrate
+app.use(errors());
 app.use((err, _req, res, next) => {
   /** если у ошибки нет статуса выставляем 500 */
   const { statusCode = 500, massage } = err;
