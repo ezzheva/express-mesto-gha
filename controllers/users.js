@@ -5,10 +5,20 @@ const NotFoundError = require('../errors/NotFoundError');
 const BadRequest = require('../errors/BadRequest');
 const ConflictError = require('../errors/ConflictError');
 
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch(next);
+};
+
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
+    .then((user) => res.status(200).send(user))
     .catch(next);
 };
 
@@ -27,7 +37,7 @@ exports.getUserId = (req, res, next) => {
       if (err.name === 'DocumentNotFound') {
         return next(new NotFoundError('Пользователь c указанным _id не найден'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -42,7 +52,9 @@ module.exports.createUser = (req, res, next) => {
     }))
     .then(() => res.status(201).send(
       {
-        name, about, avatar, email,
+        data: {
+          name, about, avatar, email,
+        },
       },
     ))
     // eslint-disable-next-line consistent-return
@@ -53,7 +65,7 @@ module.exports.createUser = (req, res, next) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
       }
-      next(err);
+      return next(err);
     });
 };
 
@@ -64,15 +76,15 @@ module.exports.updateUser = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .orFail()
     .then((user) => {
-      if (!user) {
-        return next(new NotFoundError('Пользователь не найден'));
-      }
-      return res.status(200).send(user);
+      res.status(200).send(user);
     })
     // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
+      }
+      if (err.name === 'DocumentNotFoundError') {
+        return next(new NotFoundError('Пользователь с указаным _id не найден'));
       }
       return next(err);
     });
@@ -87,7 +99,6 @@ module.exports.updateAvatar = (req, res, next) => {
     .then((users) => {
       res.status(200).send(users);
     })
-    // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
@@ -99,16 +110,6 @@ module.exports.updateAvatar = (req, res, next) => {
     });
 };
 
-module.exports.login = (req, res, next) => {
-  const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.status(200).send({ token });
-    })
-    .catch(next);
-};
-
 /** текущий пользователь */
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
@@ -118,12 +119,12 @@ module.exports.getUserMe = (req, res, next) => {
     })
   // eslint-disable-next-line consistent-return
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
       }
       if (err.name === 'DocumentNotFound') {
-        return next(new NotFoundError('Пользователь c указанным _id не найден'));
+        return next(new NotFoundError('Пользователь не найден'));
       }
-      next(err);
+      return next(err);
     });
 };

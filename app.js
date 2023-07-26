@@ -3,20 +3,30 @@ const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const helmet = require('helmet');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const rateLimit = require('express-rate-limit');
 const NotFoundError = require('./errors/NotFoundError');
+const { auth } = require('./middlewares/auth');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true, legacyHeaders: false,
+});
 
 const { PORT = 3000 } = process.env;
 
-const auth = require('./middlewares/auth');
 const { createUser, login } = require('./controllers/users');
 
 const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(limiter);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -34,9 +44,9 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(6),
   }),
 }), createUser);
-
-app.use('/users', auth, require('./routes/users'));
-app.use('/cards', auth, require('./routes/cards'));
+app.use(auth);
+app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
 
 app.use('*', (_req, _res, next) => { next(new NotFoundError('Страница не найдена')); });
 

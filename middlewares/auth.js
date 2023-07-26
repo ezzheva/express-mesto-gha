@@ -1,21 +1,19 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
 const AuthorizeError = require('../errors/AuthorizeError');
 
 // eslint-disable-next-line consistent-return
-module.exports = (req, _res, next) => {
+module.exports.auth = (req, _res, next) => {
   const { authorization } = req.headers;
-
-  if (!authorization || !authorization.startsWith('Bearer')) {
-    throw new AuthorizeError('Неоходима авторизация');
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    return new AuthorizeError('Необходима авторизация');
   }
-  const token = authorization.replace('Beader', '');
+  const token = authorization.replace('Bearer ', '');
   let payload;
   try {
     payload = jwt.verify(token, 'some-secret-key');
   } catch (err) {
-    return next(new AuthorizeError('Неоходима авторизация'));
+    return next(new AuthorizeError('Необходима авторизация'));
   }
   req.user = payload;
-  next();
+  return next();
 };
