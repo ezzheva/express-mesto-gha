@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     maxlength: 30,
     default: 'Исследователь',
     validate: {
-      validator: (url) => validator.isURL(url),
+      validator: (v) => validator.isURL(v),
       message: 'Неккоректный URL',
     },
   },
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validator: (email) => validator.isEmail(email),
+      validator: (v) => validator.isEmail(v),
       message: 'Некорректный email',
     },
   },

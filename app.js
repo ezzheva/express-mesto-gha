@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const { celebrate, Joi } = require('celebrate');
@@ -7,6 +8,7 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const NotFoundError = require('./errors/NotFoundError');
 const { auth } = require('./middlewares/auth');
 
@@ -27,6 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(limiter);
+app.use(cookieParser());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
