@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema({
     minlength: 2,
     maxlength: 30,
     default: 'Исследователь',
+    validate: {
+      validator: (url) => validator.isURL(url),
+      message: 'Неккоректный URL',
+    },
   },
   avatar: {
     type: String,
@@ -25,16 +29,16 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    require: true,
+    required: true,
     unique: true,
     validate: {
-      validator: (v) => validator.isEmail(v),
+      validator: (email) => validator.isEmail(email),
       message: 'Некорректный email',
     },
   },
   password: {
     type: String,
-    require: true,
+    required: true,
     select: false,
   },
 });

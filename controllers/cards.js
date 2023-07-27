@@ -10,7 +10,12 @@ module.exports.createCards = (req, res, next) => {
 
   Card.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new BadRequest('Некорректные данные при создании карточки'));
+      }
+      return next(err);
+    });
 };
 
 /** все карточки */
