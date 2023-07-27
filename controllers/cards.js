@@ -10,13 +10,7 @@ module.exports.createCards = (req, res, next) => {
 
   Card.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
-    // eslint-disable-next-line consistent-return
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new BadRequest('Некорректные данные при создании карточки'));
-      }
-      next(err);
-    });
+    .catch(next);
 };
 
 /** все карточки */
@@ -28,17 +22,20 @@ module.exports.getCards = (_req, res, next) => {
 
 /** удаляем карточку */
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
-      }
       if (!card.owner.equals(req.user._id)) {
         return next(new CurrentError('Удаление чужой карточки не возможно'));
       }
-      return card.remove().then(() => res.send({ message: 'Карточка удалена' }));
+      return Card.deleteOne().then(() => res.send(card));
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequest('Некорректные данные для постановки лайка'));
+      }
+      return next(err);
+    });
 };
 
 /** добавляем лайк */
@@ -48,13 +45,8 @@ module.exports.likeCard = (req, res, next) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .orFail()
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
-      }
-      res.send({ data: card });
-    })
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные для постановки лайка'));
@@ -70,13 +62,8 @@ module.exports.dislikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .orFail()
-    .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
-      }
-      res.send({ data: card });
-    })
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные для снятия лайка'));
