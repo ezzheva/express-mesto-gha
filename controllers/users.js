@@ -28,11 +28,10 @@ module.exports.getUser = (_req, res, next) => {
 /** ишем пользователя по Id */
 exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail()
+    .orFail(new NotFoundError('Пользователь не найден'))
     .then((user) => {
       res.status(200).send(user);
     })
-    // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные пользователя'));
