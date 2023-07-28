@@ -28,16 +28,13 @@ module.exports.getUser = (_req, res, next) => {
 /** ишем пользователя по Id */
 exports.getUserId = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail(new NotFoundError('Пользователь не найден'))
+    .orFail(new NotFoundError('Пользователь c указанным _id не найден'))
     .then((user) => {
       res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequest('Некорректные данные пользователя'));
-      }
-      if (err.name === 'DocumentNotFound') {
-        return next(new NotFoundError('Пользователь c указанным _id не найден'));
       }
       return next(err);
     });
@@ -54,9 +51,7 @@ module.exports.createUser = (req, res, next) => {
     }))
     .then(() => res.status(201).send(
       {
-        data: {
-          name, about, avatar, email,
-        },
+        name, about, avatar, email,
       },
     ))
     // eslint-disable-next-line consistent-return
@@ -76,7 +71,7 @@ module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
-    .orFail()
+    .orFail(new NotFoundError('Пользователь с указаным _id не найден'))
     .then((user) => {
       res.status(200).send(user);
     })
@@ -84,9 +79,6 @@ module.exports.updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return next(new NotFoundError('Пользователь с указаным _id не найден'));
       }
       return next(err);
     });
@@ -97,16 +89,13 @@ module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .orFail()
+    .orFail(new NotFoundError('Пользователь не найден'))
     .then((users) => {
       res.status(200).send(users);
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return next(new NotFoundError('Пользователь не найден'));
       }
       return next(err);
     });
@@ -115,7 +104,7 @@ module.exports.updateAvatar = (req, res, next) => {
 /** текущий пользователь */
 module.exports.getUserMe = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail()
+    .orFail(new NotFoundError('Пользователь не найден'))
     .then((user) => {
       res.status(200).send(user);
     })
@@ -123,9 +112,6 @@ module.exports.getUserMe = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
-      }
-      if (err.name === 'DocumentNotFound') {
-        return next(new NotFoundError('Пользователь не найден'));
       }
       return next(err);
     });
