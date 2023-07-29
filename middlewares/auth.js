@@ -3,7 +3,6 @@ const AuthorizeError = require('../errors/AuthorizeError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
-// eslint-disable-next-line consistent-return
 module.exports.auth = (req, _res, next) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer ')) {

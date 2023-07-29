@@ -21,7 +21,7 @@ module.exports.createCards = (req, res, next) => {
 /** все карточки */
 module.exports.getCards = (_req, res, next) => {
   Card.find({})
-    .then((cards) => res.status(200).send(cards))
+    .then((cards) => res.send({ cards }))
     .catch(next);
 };
 
@@ -33,7 +33,7 @@ module.exports.deleteCard = (req, res, next) => {
       if (!card.owner.equals(req.user._id)) {
         return next(new CurrentError('Удаление чужой карточки не возможно'));
       }
-      return Card.deleteOne().then(() => res.send(card));
+      return Card.deleteOne(card).then(() => res.send(card));
     })
     .catch((err) => {
       if (err.name === 'CastError') {

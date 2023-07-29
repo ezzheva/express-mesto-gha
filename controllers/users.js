@@ -21,7 +21,7 @@ module.exports.login = (req, res, next) => {
 /** все пользователи */
 module.exports.getUser = (_req, res, next) => {
   User.find({})
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.send({ user }))
     .catch(next);
 };
 
@@ -54,7 +54,6 @@ module.exports.createUser = (req, res, next) => {
         name, about, avatar, email,
       },
     ))
-    // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.code === 11000) {
         return next(new ConflictError('Пользователь с таким email уже существует'));
@@ -75,7 +74,6 @@ module.exports.updateUser = (req, res, next) => {
     .then((user) => {
       res.status(200).send(user);
     })
-    // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
@@ -108,7 +106,6 @@ module.exports.getUserMe = (req, res, next) => {
     .then((user) => {
       res.status(200).send(user);
     })
-  // eslint-disable-next-line consistent-return
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return next(new BadRequest('Некорректные данные пользователя'));
